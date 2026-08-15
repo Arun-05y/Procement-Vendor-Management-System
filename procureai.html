@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ProcureAI — Smart Procurement System</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Syne:wght@600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#04080f;--bg2:#070d1a;--bg3:#0a1220;--bg4:#0d1628;
+  --border:#111d30;--border2:#162236;
+  --accent:#00ffb3;--accent2:#00c9ff;--accent3:#7c5cfc;
+  --text:#d4e5ff;--text2:#6a85aa;--text3:#3a5070;
+  --red:#ff4d6d;--yellow:#ffd166;--blue:#38bdf8;--purple:#a78bfa;
+  --green:#00ffb3;
+  --font:'Plus Jakarta Sans',sans-serif;--display:'Syne',sans-serif;--mono:'Fira Code',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13.5px;font-weight:400;letter-spacing:0.01em;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;}
+
+/* Layout */
+#app{display:flex;height:100vh;overflow:hidden;}
+#sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .25s;flex-shrink:0;overflow:hidden;}
+#sidebar.collapsed{width:60px;}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 22px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+#content{flex:1;overflow-y:auto;padding:24px;}
+
+/* Sidebar */
+.logo-wrap{padding:18px 14px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.logo-text{font-family:var(--display);font-weight:800;font-size:16px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;letter-spacing:0.02em;}
+.logo-sub{font-size:10px;color:var(--text3);white-space:nowrap;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;}
+.nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:2px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:.15s;color:var(--text2);font-weight:600;white-space:nowrap;border:1px solid transparent;font-size:13px;letter-spacing:0.01em;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:linear-gradient(135deg,#00ffb315,#00c9ff10);color:var(--accent);border-color:#00ffb325;}
+.nav-icon{font-size:17px;flex-shrink:0;width:20px;text-align:center;}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:auto;}
+.sidebar-bottom{padding:10px 8px;border-top:1px solid var(--border);}
+.avatar-wrap{display:flex;align-items:center;gap:10px;padding:10px 12px;white-space:nowrap;}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent3),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;}
+
+/* Topbar */
+.search-wrap{position:relative;flex:1;max-width:360px;}
+.search-wrap input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:9px 12px 9px 34px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:.2s;}
+.search-wrap input:focus{border-color:#00ffb340;box-shadow:0 0 0 3px #00ffb310;}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;}
+.topbar-btns{display:flex;gap:8px;margin-left:auto;align-items:center;}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700;transition:.15s;letter-spacing:0.02em;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#00c87a);color:#001a0f;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px #00ffb340;}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}
+.btn-ghost:hover{background:var(--bg4);color:var(--text);}
+.btn-ai{background:linear-gradient(135deg,#7c5cfc22,#00c9ff18);color:#a78bfa;border:1px solid #7c5cfc44;font-weight:600;}
+.btn-ai:hover{background:linear-gradient(135deg,#7c5cfc33,#00c9ff28);border-color:#7c5cfc66;}
+.btn-danger{background:#ff4d6d18;color:var(--red);border:1px solid #ff4d6d28;}
+.btn-danger:hover{background:#ff4d6d28;}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:7px;}
+
+/* Cards */
+.card{background:linear-gradient(145deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:16px;transition:.2s;}
+.card:hover{border-color:#00ffb320;box-shadow:0 4px 24px #00000055;}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:22px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.kpi-card{padding:20px;}
+.kpi-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-weight:800;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;font-family:var(--font);}
+.kpi-value{font-family:var(--display);font-size:30px;font-weight:800;margin-bottom:3px;letter-spacing:-0.02em;}
+.kpi-delta{font-size:11.5px;color:var(--accent);font-weight:700;margin-bottom:10px;letter-spacing:0.01em;}
+
+/* Chip / Badge */
+.chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em;font-family:var(--font);}
+.tag{background:var(--bg4);color:var(--text2);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;letter-spacing:0.02em;}
+
+/* Table */
+table{width:100%;border-collapse:collapse;}
+th{padding:10px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--border);font-family:var(--font);}
+td{padding:12px 14px;border-bottom:1px solid #0a1020;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#060c18;}
+.vendor-avatar{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#00ffb322,#00c9ff22);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);font-size:14px;flex-shrink:0;}
+
+/* Progress */
+.progress{background:var(--bg4);border-radius:20px;height:5px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+
+/* Page header */
+.page-title{font-family:var(--display);font-weight:800;font-size:24px;background:linear-gradient(90deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:3px;letter-spacing:-0.01em;}
+.page-sub{color:var(--text3);font-size:12.5px;margin-bottom:20px;font-weight:500;letter-spacing:0.02em;}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:#000000aa;z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.modal{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:28px;width:490px;max-width:95vw;animation:popIn .2s ease;}
+.modal-title{font-family:var(--display);font-weight:800;font-size:17px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;letter-spacing:-0.01em;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-field label{display:block;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-weight:800;margin-bottom:5px;}
+.inp{background:var(--bg2);border:1px solid var(--border2);border-radius:9px;padding:9px 13px;color:var(--text);width:100%;font-family:var(--font);font-size:13px;font-weight:500;outline:none;transition:.2s;}
+.inp:focus{border-color:#00ffb350;box-shadow:0 0 0 3px #00ffb310;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+
+/* AI Chat */
+.chat-fab{position:fixed;bottom:26px;right:26px;z-index:998;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent3),var(--accent2));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 6px 28px #7c5cfc66;transition:.2s;animation:fabGlow 3s ease infinite;}
+.chat-fab:hover{transform:scale(1.1);}
+.chat-fab .notif{position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:50%;background:var(--accent);font-size:9px;font-weight:800;color:#001a0f;display:flex;align-items:center;justify-content:center;}
+.chat-panel{position:fixed;right:0;top:0;bottom:0;width:420px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:999;animation:slideLeft .25s ease;}
+.chat-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--bg3),var(--bg2));flex-shrink:0;}
+.chat-ai-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent3),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;box-shadow:0 0 16px #7c5cfc55;}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.bubble-ai{background:var(--bg3);border:1px solid var(--border2);border-radius:14px 14px 14px 4px;padding:12px 14px;max-width:88%;font-size:13px;line-height:1.65;align-self:flex-start;font-weight:400;}
+.bubble-user{background:linear-gradient(135deg,#00ffb322,#00c9ff18);border:1px solid #00ffb333;border-radius:14px 14px 4px 14px;padding:12px 14px;max-width:82%;font-size:13px;align-self:flex-end;font-weight:500;}
+.chat-input-wrap{padding:12px 14px 16px;border-top:1px solid var(--border);flex-shrink:0;}
+.chat-input-row{display:flex;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:6px 8px 6px 13px;transition:.2s;}
+.chat-input-row:focus-within{border-color:#7c5cfc55;}
+.chat-input-row textarea{background:transparent;border:none;color:var(--text);font-family:var(--font);font-size:13px;resize:none;flex:1;outline:none;height:36px;line-height:1.5;padding-top:4px;}
+.chat-send{background:linear-gradient(135deg,var(--accent3),var(--accent2));border:none;border-radius:8px;width:36px;height:36px;cursor:pointer;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
+.chat-send:hover{transform:scale(1.07);}
+.chat-send:disabled{opacity:.4;cursor:not-allowed;}
+.suggestions{padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:6px;}
+.sug-chip{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:6px 11px;font-size:12px;cursor:pointer;transition:.15s;color:var(--text2);font-weight:600;letter-spacing:0.01em;}
+.sug-chip:hover{border-color:#7c5cfc55;color:#a78bfa;background:var(--bg4);}
+.typing{display:flex;gap:5px;align-items:center;padding:4px 2px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1.2s ease infinite;}
+.dot:nth-child(2){animation-delay:.2s;}
+.dot:nth-child(3){animation-delay:.4s;}
+.chat-backdrop{position:fixed;inset:0;background:#00000066;z-index:998;}
+
+/* Toast */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);padding:11px 20px;border-radius:12px;font-weight:600;font-size:13px;z-index:2000;animation:toastIn .2s ease;white-space:nowrap;backdrop-filter:blur(8px);}
+.toast.success{background:#00ffb318;border:1px solid #00ffb440;color:var(--accent);}
+.toast.error{background:#ff4d6d18;border:1px solid #ff4d6d40;color:var(--red);}
+
+/* Sparkline */
+.spark{width:100%;height:42px;}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes fabGlow{0%,100%{box-shadow:0 6px 28px #7c5cfc55}50%{box-shadow:0 6px 40px #7c5cfc88}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fade-up{animation:fadeUp .35s ease both;}
+
+/* RFQ cards */
+.rfq-card{padding:22px;}
+.rfq-id{font-size:11px;color:var(--accent);font-weight:600;font-family:var(--mono);margin-bottom:5px;letter-spacing:0.05em;}
+.rfq-title{font-family:var(--display);font-weight:700;font-size:15px;margin-bottom:7px;letter-spacing:-0.01em;}
+.rfq-meta{display:flex;gap:18px;color:var(--text3);font-size:12px;flex-wrap:wrap;}
+
+/* Filter tabs */
+.filter-tabs{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-tab{padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);transition:.15s;letter-spacing:0.02em;font-family:var(--font);}
+.filter-tab.active{background:linear-gradient(135deg,var(--accent),#00c87a);color:#001a0f;border-color:transparent;}
+.filter-tab:hover:not(.active){background:var(--bg4);color:var(--text);}
+
+/* Status live dot */
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s ease infinite;margin-right:5px;}
+
+/* Analytics bars */
+.month-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.month-label{width:26px;font-size:11px;color:var(--text3);flex-shrink:0;}
+.month-val{font-size:11px;color:var(--text2);width:36px;text-align:right;flex-shrink:0;}
+
+/* Sidebar collapse */
+#sidebar.collapsed .nav-item span:not(.nav-icon){display:none;}
+#sidebar.collapsed .nav-dot{display:none;}
+#sidebar.collapsed .logo-text,#sidebar.collapsed .logo-sub{display:none;}
+#sidebar.collapsed .avatar-wrap span:not(.avatar){display:none;}
+#sidebar.collapsed .collapse-label{display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="logo-wrap">
+      <div class="logo-icon">⚙</div>
+      <div><div class="logo-text">ProcureAI</div><div class="logo-sub">Procurement v2.5</div></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-bottom">
+      <div class="nav-item" onclick="toggleSidebar()" style="margin-bottom:4px;">
+        <span class="nav-icon" id="collapse-icon">◀</span>
+        <span class="collapse-label">Collapse</span>
+      </div>
+      <div class="avatar-wrap">
+        <div class="avatar">A</div>
+        <div><div style="font-weight:600;font-size:12px;">Admin</div><div style="font-size:10px;color:var(--text3);">Procurement Mgr</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div id="main">
+    <header id="topbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search vendors, orders, RFQs…" oninput="onSearch(this.value)"/>
+      </div>
+      <div class="topbar-btns">
+        <button class="btn btn-ghost" style="font-size:16px;padding:7px 10px;">🔔</button>
+        <button class="btn btn-ghost" style="font-size:16px;padding:7px 10px;">⬇</button>
+        <button class="btn btn-ai" onclick="openChat()">🤖 AI Assist</button>
+        <button class="btn btn-primary" id="action-btn" onclick="openModal('add')" style="display:none;">＋ Add</button>
+      </div>
+    </header>
+    <main id="content"></main>
+  </div>
+</div>
+
+<!-- Chat FAB -->
+<button class="chat-fab" id="chat-fab" onclick="openChat()">🤖<div class="notif">AI</div></button>
+
+<!-- Chat Panel -->
+<div id="chat-backdrop" class="chat-backdrop" style="display:none;" onclick="closeChat()"></div>
+<div id="chat-panel" class="chat-panel" style="display:none;">
+  <div class="chat-header">
+    <div class="chat-ai-avatar">🤖</div>
+    <div style="flex:1;">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;letter-spacing:0.02em;background:linear-gradient(90deg,var(--accent3),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">ProcureAI</div>
+      <div style="font-size:11px;color:var(--text3);display:flex;align-items:center;"><span class="live-dot"></span>Powered by Claude · Always on</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="closeChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="suggestions" id="suggestions">
+    <div style="width:100%;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:4px;">Quick Questions</div>
+  </div>
+  <div class="chat-input-wrap">
+    <div class="chat-input-row">
+      <textarea id="chat-input" placeholder="Ask about vendors, costs, orders…" rows="1" onkeydown="chatKeydown(event)"></textarea>
+      <button class="chat-send" id="chat-send-btn" onclick="sendChat()">↑</button>
+    </div>
+    <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:7px;">Powered by Claude AI · Enter to send</div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal-bg" class="modal-bg" style="display:none;" onclick="e=>e.target===this&&closeModal()">
+  <div class="modal" id="modal-box"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast" style="display:none;"></div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+let vendors = [
+  {id:1,name:"TechSupply Co.",category:"Electronics",contact:"Ravi Kumar",email:"ravi@techsupply.com",phone:"+91 98765 43210",rating:4.8,status:"Active",contracts:12,spend:2450000,country:"India",joined:"2022-03-15"},
+  {id:2,name:"BuildMart Ltd.",category:"Construction",contact:"Priya Sharma",email:"priya@buildmart.com",phone:"+91 97654 32109",rating:4.2,status:"Active",contracts:7,spend:1870000,country:"India",joined:"2021-07-22"},
+  {id:3,name:"OfficeZone Inc.",category:"Office Supplies",contact:"Ankit Patel",email:"ankit@officezone.com",phone:"+91 96543 21098",rating:3.9,status:"On Hold",contracts:5,spend:540000,country:"India",joined:"2023-01-10"},
+  {id:4,name:"MediCore Pharma",category:"Medical",contact:"Sunita Rao",email:"sunita@medicore.com",phone:"+91 95432 10987",rating:4.6,status:"Active",contracts:9,spend:3200000,country:"India",joined:"2020-11-05"},
+  {id:5,name:"SafetyFirst Pvt.",category:"Safety Equipment",contact:"Kiran Mehta",email:"kiran@safetyfirst.com",phone:"+91 94321 09876",rating:4.1,status:"Inactive",contracts:3,spend:320000,country:"India",joined:"2023-06-18"},
+];
+let orders = [
+  {id:"PO-2024-001",vendor:"TechSupply Co.",item:"Laptops (Dell XPS 15)",qty:25,unit:"Units",amount:1875000,status:"Delivered",date:"2024-12-10",priority:"High",category:"Electronics"},
+  {id:"PO-2024-002",vendor:"BuildMart Ltd.",item:"Steel Rods (Grade A)",qty:500,unit:"Kg",amount:175000,status:"In Transit",date:"2024-12-18",priority:"Medium",category:"Construction"},
+  {id:"PO-2024-003",vendor:"OfficeZone Inc.",item:"A4 Paper Reams",qty:200,unit:"Packs",amount:48000,status:"Pending",date:"2024-12-22",priority:"Low",category:"Office Supplies"},
+  {id:"PO-2024-004",vendor:"MediCore Pharma",item:"First Aid Kits",qty:50,unit:"Kits",amount:75000,status:"Approved",date:"2024-12-20",priority:"High",category:"Medical"},
+  {id:"PO-2024-005",vendor:"TechSupply Co.",item:"Network Switches",qty:10,unit:"Units",amount:320000,status:"Delivered",date:"2024-12-05",priority:"High",category:"Electronics"},
+  {id:"PO-2024-006",vendor:"SafetyFirst Pvt.",item:"Hard Hats & Gloves",qty:100,unit:"Sets",amount:45000,status:"Cancelled",date:"2024-12-08",priority:"Low",category:"Safety Equipment"},
+];
+const rfqs = [
+  {id:"RFQ-2025-001",title:"Annual IT Equipment Procurement",deadline:"2025-01-15",vendors:4,status:"Open",budget:5000000,responses:2},
+  {id:"RFQ-2025-002",title:"Office Furniture Replacement",deadline:"2025-01-20",vendors:3,status:"Evaluation",budget:800000,responses:3},
+  {id:"RFQ-2025-003",title:"Security System Upgrade",deadline:"2025-02-01",vendors:5,status:"Draft",budget:1200000,responses:0},
+];
+
+const STATUS_C={Active:"#00ffb3","On Hold":"#ffd166",Inactive:"#ff4d6d",Delivered:"#00ffb3","In Transit":"#38bdf8",Pending:"#ffd166",Approved:"#a78bfa",Cancelled:"#ff4d6d",Open:"#00ffb3",Evaluation:"#ffd166",Draft:"#64748b"};
+const fmt=n=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(n);
+let currentTab="dashboard", searchVal="", orderFilter="All", chatMessages=[], chatLoading=false, sideCollapsed=false;
+
+// ─── NAV ─────────────────────────────────────────────────────────────────────
+const TABS=[
+  {key:"dashboard",icon:"🏠",label:"Dashboard"},
+  {key:"vendors",icon:"🏢",label:"Vendors"},
+  {key:"orders",icon:"📋",label:"Orders"},
+  {key:"rfq",icon:"📄",label:"RFQ & Bids"},
+  {key:"analytics",icon:"📊",label:"Analytics"},
+];
+function buildNav(){
+  const nav=document.getElementById("nav");
+  nav.innerHTML=TABS.map(t=>`
+    <div class="nav-item ${t.key===currentTab?"active":""}" onclick="setTab('${t.key}')">
+      <span class="nav-icon">${t.icon}</span>
+      <span>${t.label}</span>
+      ${t.key===currentTab?'<span class="nav-dot"></span>':""}
+    </div>`).join("");
+}
+function setTab(t){
+  currentTab=t; buildNav(); renderPage();
+  const ab=document.getElementById("action-btn");
+  if(t==="vendors"){ab.style.display="";ab.textContent="＋ Add Vendor";ab.onclick=()=>openModal("addVendor");}
+  else if(t==="orders"){ab.style.display="";ab.textContent="＋ New PO";ab.onclick=()=>openModal("addOrder");}
+  else ab.style.display="none";
+}
+function toggleSidebar(){
+  sideCollapsed=!sideCollapsed;
+  document.getElementById("sidebar").classList.toggle("collapsed",sideCollapsed);
+  document.getElementById("collapse-icon").textContent=sideCollapsed?"▶":"◀";
+}
+function onSearch(v){searchVal=v;renderPage();}
+
+// ─── SPARKLINE ───────────────────────────────────────────────────────────────
+function sparkSVG(data,color="#00ffb3",h=42){
+  const max=Math.max(...data),min=Math.min(...data),w=100;
+  const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-min)/(max-min||1))*(h-8)-4}`).join(" ");
+  const id="g"+color.replace("#","");
+  return`<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity=".25"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <polygon points="0,${h} ${pts} ${w},${h}" fill="url(#${id})"/>
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// ─── CHIP ─────────────────────────────────────────────────────────────────────
+function chip(label,color){return`<span class="chip" style="background:${color}22;color:${color};">${label}</span>`;}
+function priorityChip(p){const c=p==="High"?"#ff4d6d":p==="Medium"?"#ffd166":"#00ffb3";return chip(p,c);}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function renderPage(){
+  const el=document.getElementById("content");
+  el.innerHTML="";
+  const div=document.createElement("div");
+  div.className="fade-up";
+  if(currentTab==="dashboard") div.innerHTML=renderDashboard();
+  else if(currentTab==="vendors") div.innerHTML=renderVendors();
+  else if(currentTab==="orders") div.innerHTML=renderOrders();
+  else if(currentTab==="rfq") div.innerHTML=renderRFQ();
+  else if(currentTab==="analytics") div.innerHTML=renderAnalytics();
+  el.appendChild(div);
+}
+
+function renderDashboard(){
+  const totalSpend=orders.filter(o=>o.status!=="Cancelled").reduce((s,o)=>s+o.amount,0);
+  const activeV=vendors.filter(v=>v.status==="Active").length;
+  const pendingO=orders.filter(o=>["Pending","Approved"].includes(o.status)).length;
+  const avgR=(vendors.reduce((s,v)=>s+v.rating,0)/vendors.length).toFixed(1);
+  const spendByCat=orders.reduce((a,o)=>{if(o.status!=="Cancelled")a[o.category]=(a[o.category]||0)+o.amount;return a;},{});
+  const catColors={Electronics:"#38bdf8",Construction:"#ffd166","Office Supplies":"#a78bfa",Medical:"#00ffb3","Safety Equipment":"#ff4d6d"};
+
+  return`
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:10px;">
+    <div><h1 class="page-title">Procurement Dashboard</h1><p class="page-sub" style="margin-bottom:0;"><span class="live-dot"></span>Live · December 2024</p></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost btn-sm" onclick="setTab('analytics')">📊 Reports</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('addOrder')">＋ New PO</button>
+    </div>
+  </div>
+
+  <div class="grid-4">
+    ${[
+      {label:"Total Spend",value:fmt(totalSpend),delta:"↑ 12.4% vs last month",data:[2.1,2.8,2.4,3.2,2.9,3.8,4.2,3.6,4.8,5.1,4.6,5.4],color:"#00ffb3",icon:"💰"},
+      {label:"Active Vendors",value:activeV,delta:"↑ 2 new this quarter",data:[8,9,9,10,11,12,13,12,14,14,15,15],color:"#38bdf8",icon:"🏢"},
+      {label:"Pending Orders",value:pendingO,delta:"Requires review",data:[5,3,6,4,7,5,4,6,3,5,4,2],color:"#ffd166",icon:"⏳"},
+      {label:"Avg Rating",value:avgR+" ★",delta:"↑ 0.2 pts improvement",data:[4.0,4.1,4.0,4.2,4.1,4.3,4.2,4.4,4.3,4.5,4.4,4.5],color:"#a78bfa",icon:"⭐"},
+    ].map(s=>`
+    <div class="card kpi-card">
+      <div class="kpi-label">${s.label}<span style="font-size:18px;">${s.icon}</span></div>
+      <div class="kpi-value" style="color:${s.color};">${s.value}</div>
+      <div class="kpi-delta">${s.delta}</div>
+      ${sparkSVG(s.data,s.color)}
+    </div>`).join("")}
+  </div>
+
+  <div class="grid-2">
+    <div class="card" style="padding:20px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+        <b style="font-size:14px;">Recent Orders</b>
+        <span style="color:var(--accent);cursor:pointer;font-size:12px;" onclick="setTab('orders')">View all →</span>
+      </div>
+      ${orders.slice(0,4).map(o=>`
+      <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bg4);">
+        <div>
+          <div style="font-weight:600;font-size:13px;">${o.item}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">${o.vendor} · ${o.date}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;font-size:13px;">${fmt(o.amount)}</div>
+          ${chip(o.status,STATUS_C[o.status])}
+        </div>
+      </div>`).join("")}
+    </div>
+
+    <div class="card" style="padding:20px;">
+      <b style="font-size:14px;display:block;margin-bottom:16px;">Spend by Category</b>
+      ${Object.entries(spendByCat).map(([cat,val])=>{
+        const pct=Math.round((val/totalSpend)*100);
+        return`<div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;">
+            <span style="color:var(--text2);">${cat}</span>
+            <span style="font-weight:600;">${pct}% · ${fmt(val)}</span>
+          </div>
+          <div class="progress"><div class="progress-fill" style="width:${pct}%;background:${catColors[cat]||"var(--accent)"};"></div></div>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>
+
+  <div class="card" style="padding:20px;">
+    <b style="font-size:14px;display:block;margin-bottom:16px;">🏆 Top Vendors</b>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;">
+      ${[...vendors].sort((a,b)=>b.rating-a.rating).slice(0,5).map(v=>`
+      <div style="background:var(--bg4);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:.2s;" onmouseover="this.style.borderColor='#00ffb335'" onmouseout="this.style.borderColor='var(--border)'" onclick="openVendorDetail(${v.id})">
+        <div class="vendor-avatar" style="width:38px;height:38px;border-radius:9px;margin-bottom:8px;">${v.name[0]}</div>
+        <div style="font-weight:700;font-size:13px;">${v.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin:2px 0 6px;">${v.category}</div>
+        <div style="color:#ffd166;font-weight:700;">★ ${v.rating}</div>
+      </div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function renderVendors(){
+  const filt=vendors.filter(v=>v.name.toLowerCase().includes(searchVal.toLowerCase())||v.category.toLowerCase().includes(searchVal.toLowerCase()));
+  return`
+  <h1 class="page-title">Vendor Management</h1>
+  <p class="page-sub">${vendors.length} registered vendors · ${vendors.filter(v=>v.status==="Active").length} active</p>
+  <div class="card" style="overflow:hidden;">
+    <table>
+      <thead><tr><th>Vendor</th><th>Category</th><th>Rating</th><th>Total Spend</th><th>Contracts</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${filt.map(v=>`<tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="vendor-avatar">${v.name[0]}</div>
+              <div><div style="font-weight:600;">${v.name}</div><div style="font-size:11px;color:var(--text3);">${v.email}</div></div>
+            </div>
+          </td>
+          <td><span class="tag">${v.category}</span></td>
+          <td><span style="color:#ffd166;font-weight:700;">★ ${v.rating}</span></td>
+          <td style="font-weight:700;">${fmt(v.spend)}</td>
+          <td style="color:var(--text2);">${v.contracts}</td>
+          <td>${chip(v.status,STATUS_C[v.status])}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-ghost btn-sm" onclick="openVendorDetail(${v.id})">View</button>
+              <button class="btn btn-danger btn-sm" onclick="removeVendor(${v.id})">🗑</button>
+            </div>
+          </td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderOrders(){
+  const filt=orders.filter(o=>(orderFilter==="All"||o.status===orderFilter)&&(o.id+o.item+o.vendor).toLowerCase().includes(searchVal.toLowerCase()));
+  return`
+  <h1 class="page-title">Purchase Orders</h1>
+  <p class="page-sub">${orders.length} total orders</p>
+  <div class="filter-tabs">
+    ${["All","Pending","Approved","In Transit","Delivered","Cancelled"].map(f=>
+      `<div class="filter-tab ${orderFilter===f?"active":""}" onclick="setOrderFilter('${f}')">${f}</div>`
+    ).join("")}
+  </div>
+  <div class="card" style="overflow:hidden;">
+    <table>
+      <thead><tr><th>PO ID</th><th>Item</th><th>Vendor</th><th>Qty</th><th>Amount</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>
+        ${filt.length?filt.map(o=>`<tr>
+          <td style="font-weight:700;color:var(--accent);font-family:var(--mono);font-size:11px;">${o.id}</td>
+          <td style="font-weight:500;">${o.item}</td>
+          <td style="color:var(--text2);font-size:12px;">${o.vendor}</td>
+          <td style="color:var(--text2);">${o.qty} ${o.unit}</td>
+          <td style="font-weight:700;">${fmt(o.amount)}</td>
+          <td>${priorityChip(o.priority)}</td>
+          <td>${chip(o.status,STATUS_C[o.status])}</td>
+          <td style="color:var(--text3);font-size:11px;">${o.date}</td>
+        </tr>`).join(""):`<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text3);">No orders found</td></tr>`}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderRFQ(){
+  return`
+  <h1 class="page-title">RFQ & Bidding</h1>
+  <p class="page-sub">Request for Quotations — manage vendor bids</p>
+  <div style="display:grid;gap:14px;">
+    ${rfqs.map(r=>`
+    <div class="card rfq-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="rfq-id">${r.id}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">${chip(r.status,STATUS_C[r.status])}</div>
+          <div class="rfq-title">${r.title}</div>
+          <div class="rfq-meta">
+            <span>📅 Deadline: <b style="color:var(--text2);">${r.deadline}</b></span>
+            <span>👥 ${r.vendors} vendors</span>
+            <span>📩 ${r.responses} responses</span>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:2px;">Budget</div>
+          <div style="font-size:24px;font-weight:800;color:var(--accent);">${fmt(r.budget)}</div>
+          <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end;">
+            <button class="btn btn-ghost btn-sm">View Bids</button>
+            ${r.status==="Draft"?'<button class="btn btn-primary btn-sm" onclick="showToast(\'RFQ Published!\')">Publish</button>':""}
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:5px;">
+          <span>Response Progress</span><span>${r.responses}/${r.vendors}</span>
+        </div>
+        <div class="progress"><div class="progress-fill" style="width:${(r.responses/r.vendors)*100}%;"></div></div>
+      </div>
+    </div>`).join("")}
+  </div>
+  <button class="btn btn-primary" style="margin-top:16px;" onclick="showToast('RFQ draft saved!')">＋ Create New RFQ</button>`;
+}
+
+function renderAnalytics(){
+  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const vals=[1.2,1.5,1.8,1.4,2.1,1.9,2.4,2.0,2.8,3.1,2.7,3.4];
+  return`
+  <h1 class="page-title">Analytics & Reports</h1>
+  <p class="page-sub">Procurement performance insights · FY 2024</p>
+
+  <div class="grid-4" style="margin-bottom:20px;">
+    ${[
+      {title:"Cost Savings",value:"₹4.2L",trend:"↑ 18%",color:"#00ffb3",icon:"💸"},
+      {title:"On-Time Delivery",value:"87%",trend:"↑ 5%",color:"#38bdf8",icon:"🚚"},
+      {title:"PO Cycle Time",value:"4.2 days",trend:"↓ 1.1d",color:"#ffd166",icon:"⚡"},
+      {title:"Vendor Compliance",value:"94%",trend:"↑ 2%",color:"#a78bfa",icon:"✅"},
+    ].map(m=>`
+    <div class="card kpi-card">
+      <div class="kpi-label">${m.title}<span style="font-size:18px;">${m.icon}</span></div>
+      <div class="kpi-value" style="color:${m.color};">${m.value}</div>
+      <div class="kpi-delta">${m.trend} vs last quarter</div>
+    </div>`).join("")}
+  </div>
+
+  <div class="grid-2">
+    <div class="card" style="padding:20px;">
+      <b style="font-size:14px;display:block;margin-bottom:16px;">📈 Monthly Spend Trend (2024)</b>
+      ${months.map((m,i)=>`
+      <div class="month-bar-row">
+        <span class="month-label">${m}</span>
+        <div class="progress" style="flex:1;"><div class="progress-fill" style="width:${(vals[i]/3.4)*100}%;"></div></div>
+        <span class="month-val">₹${vals[i]}M</span>
+      </div>`).join("")}
+    </div>
+
+    <div class="card" style="padding:20px;">
+      <b style="font-size:14px;display:block;margin-bottom:16px;">🏆 Vendor Scorecard</b>
+      <table>
+        <thead><tr><th>Vendor</th><th>Score</th><th>Performance</th><th>Spend</th></tr></thead>
+        <tbody>
+          ${vendors.map(v=>`<tr>
+            <td style="font-weight:600;font-size:12px;">${v.name.split(" ")[0]}</td>
+            <td><span style="color:#ffd166;font-weight:700;">★ ${v.rating}</span></td>
+            <td><div class="progress" style="width:80px;"><div class="progress-fill" style="width:${(v.rating/5)*100}%;"></div></div></td>
+            <td style="font-size:11px;color:var(--text2);">${fmt(v.spend)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function setOrderFilter(f){orderFilter=f;renderPage();}
+
+// ─── MODALS ──────────────────────────────────────────────────────────────────
+function openModal(type){
+  const bg=document.getElementById("modal-bg");
+  const box=document.getElementById("modal-box");
+  bg.style.display="flex";
+  bg.onclick=e=>{if(e.target===bg)closeModal();};
+
+  if(type==="addVendor"){
+    box.innerHTML=`
+    <div class="modal-title">🏢 Add New Vendor <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="form-grid">
+      ${[{l:"Company Name *",id:"v-name",ph:"TechVend Inc."},{l:"Category",id:"v-cat",ph:"Electronics"},{l:"Contact Person",id:"v-contact",ph:"John Doe"},{l:"Email *",id:"v-email",ph:"contact@vendor.com"},{l:"Phone",id:"v-phone",ph:"+91 98765 43210"},{l:"Country",id:"v-country",ph:"India"}].map(f=>`
+      <div class="form-field"><label>${f.l}</label><input class="inp" id="${f.id}" placeholder="${f.ph}"/></div>`).join("")}
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addVendor()">✓ Add Vendor</button>
+    </div>`;
+  } else if(type==="addOrder"){
+    box.innerHTML=`
+    <div class="modal-title">📋 New Purchase Order <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button></div>
+    <div class="form-field" style="margin-bottom:12px;"><label>Vendor *</label>
+      <select class="inp" id="o-vendor"><option value="">Select vendor…</option>${vendors.map(v=>`<option>${v.name}</option>`).join("")}</select>
+    </div>
+    <div class="form-grid">
+      <div class="form-field" style="grid-column:span 2;"><label>Item Description *</label><input class="inp" id="o-item" placeholder="e.g. Dell Laptops XPS 15"/></div>
+      <div class="form-field"><label>Category</label><input class="inp" id="o-cat" placeholder="Electronics"/></div>
+      <div class="form-field"><label>Priority</label>
+        <select class="inp" id="o-priority"><option>Low</option><option selected>Medium</option><option>High</option></select>
+      </div>
+      <div class="form-field"><label>Quantity</label><input class="inp" id="o-qty" type="number" placeholder="10"/></div>
+      <div class="form-field"><label>Total Amount (₹)</label><input class="inp" id="o-amount" type="number" placeholder="500000"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addOrder()">✓ Create PO</button>
+    </div>`;
+  }
+}
+
+function openVendorDetail(id){
+  const v=vendors.find(x=>x.id===id); if(!v) return;
+  const bg=document.getElementById("modal-bg");
+  const box=document.getElementById("modal-box");
+  bg.style.display="flex";
+  bg.onclick=e=>{if(e.target===bg)closeModal();};
+  box.innerHTML=`
+  <div class="modal-title">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="vendor-avatar" style="width:46px;height:46px;border-radius:12px;font-size:18px;">${v.name[0]}</div>
+      <div><div style="font-size:17px;">${v.name}</div>${chip(v.status,STATUS_C[v.status])}</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
+  </div>
+  <div class="form-grid">
+    ${[["Category",v.category],["Contact",v.contact],["Email",v.email],["Phone",v.phone],["Country",v.country],["Joined",v.joined],["Total Spend",fmt(v.spend)],["Contracts",v.contracts]].map(([k,val])=>`
+    <div style="background:var(--bg2);border-radius:9px;padding:12px;border:1px solid var(--border);">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700;">${k}</div>
+      <div style="font-weight:500;font-size:13px;">${val}</div>
+    </div>`).join("")}
+  </div>
+  <div style="margin-top:14px;background:var(--bg2);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);">
+    <span style="color:var(--text2);">Vendor Rating</span>
+    <div>${[1,2,3,4,5].map(s=>`<span style="color:${s<=Math.round(v.rating)?"#ffd166":"var(--border2)"};font-size:20px;">★</span>`).join("")}
+    <span style="color:#ffd166;font-weight:800;font-size:15px;margin-left:6px;">${v.rating}</span></div>
+  </div>
+  <div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">Close</button></div>`;
+}
+
+function closeModal(){document.getElementById("modal-bg").style.display="none";}
+
+function addVendor(){
+  const name=document.getElementById("v-name").value;
+  const email=document.getElementById("v-email").value;
+  if(!name||!email){showToast("Name & Email required","error");return;}
+  vendors.push({id:Date.now(),name,category:document.getElementById("v-cat").value||"General",contact:document.getElementById("v-contact").value,email,phone:document.getElementById("v-phone").value,country:document.getElementById("v-country").value||"India",rating:4.0,status:"Active",contracts:0,spend:0,joined:new Date().toISOString().slice(0,10)});
+  closeModal(); showToast("Vendor added successfully!"); renderPage();
+}
+
+function addOrder(){
+  const vendor=document.getElementById("o-vendor").value;
+  const item=document.getElementById("o-item").value;
+  if(!vendor||!item){showToast("Vendor & Item required","error");return;}
+  orders.push({id:`PO-2025-${String(orders.length+1).padStart(3,"0")}`,vendor,item,category:document.getElementById("o-cat").value||"General",priority:document.getElementById("o-priority").value,qty:+document.getElementById("o-qty").value||1,unit:"Units",amount:+document.getElementById("o-amount").value||0,status:"Pending",date:new Date().toISOString().slice(0,10)});
+  closeModal(); showToast("Purchase Order created!"); renderPage();
+}
+
+function removeVendor(id){vendors=vendors.filter(v=>v.id!==id);showToast("Vendor removed");renderPage();}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg,type="success"){
+  const t=document.getElementById("toast");
+  t.textContent=(type==="error"?"✕ ":"✓ ")+msg;
+  t.className=`toast ${type}`;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",3000);
+}
+
+// ─── AI CHAT ─────────────────────────────────────────────────────────────────
+const SYSTEM=`You are ProcureAI — a smart procurement assistant embedded in the ProcureAI enterprise platform.
+Current data:
+- Vendors: ${JSON.stringify([{name:"TechSupply Co.",rating:4.8,status:"Active",spend:2450000,category:"Electronics"},{name:"BuildMart Ltd.",rating:4.2,status:"Active",spend:1870000,category:"Construction"},{name:"OfficeZone Inc.",rating:3.9,status:"On Hold",spend:540000,category:"Office Supplies"},{name:"MediCore Pharma",rating:4.6,status:"Active",spend:3200000,category:"Medical"},{name:"SafetyFirst Pvt.",rating:4.1,status:"Inactive",spend:320000,category:"Safety Equipment"}])}
+- Orders: 6 orders totaling ₹25.4L. Statuses: 2 Delivered, 1 In Transit, 1 Pending, 1 Approved, 1 Cancelled.
+- RFQs: 3 active (IT Equipment ₹50L Open, Office Furniture ₹8L Evaluation, Security ₹12L Draft).
+Be concise, data-driven, use bullet points for lists. Respond professionally.`;
+
+const SUGS=["Which vendor has the best rating?","Summarize pending orders","How to reduce procurement cost?","Which RFQ needs attention?","Top vendor by spend?"];
+
+function openChat(){
+  document.getElementById("chat-panel").style.display="flex";
+  document.getElementById("chat-backdrop").style.display="block";
+  document.getElementById("chat-fab").style.display="none";
+  if(chatMessages.length===0){
+    chatMessages=[{role:"assistant",content:"👋 Hi! I'm **ProcureAI**. I know your vendors, orders, and RFQs. Ask me anything about your procurement!"}];
+    renderChat();
+    buildSuggestions();
+  }
+  setTimeout(()=>document.getElementById("chat-input").focus(),100);
+}
+
+function closeChat(){
+  document.getElementById("chat-panel").style.display="none";
+  document.getElementById("chat-backdrop").style.display="none";
+  document.getElementById("chat-fab").style.display="flex";
+}
+
+function buildSuggestions(){
+  const el=document.getElementById("suggestions");
+  el.innerHTML=`<div style="width:100%;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:4px;">Quick Questions</div>`
+    +SUGS.map(s=>`<div class="sug-chip" onclick="sendChatMsg('${s}')">${s}</div>`).join("");
+}
+
+function renderChat(){
+  const el=document.getElementById("chat-messages");
+  el.innerHTML=chatMessages.map(m=>`
+    <div style="display:flex;flex-direction:column;align-items:${m.role==="user"?"flex-end":"flex-start"};animation:fadeUp .2s ease;">
+      ${m.role==="assistant"?`
+      <div style="display:flex;align-items:flex-start;gap:8px;max-width:92%;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#7c5cfc,#00c9ff);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px;">🤖</div>
+        <div class="bubble-ai">${mdToHtml(m.content)}</div>
+      </div>`:`<div class="bubble-user">${m.content}</div>`}
+    </div>`).join("");
+  if(chatLoading) el.innerHTML+=`<div style="display:flex;align-items:flex-start;gap:8px;"><div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#7c5cfc,#00c9ff);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">🤖</div><div class="bubble-ai"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div></div>`;
+  el.scrollTop=el.scrollHeight;
+}
+
+function mdToHtml(t){
+  return t.split("\n").map(line=>{
+    if(line.startsWith("- ")) return`<div style="display:flex;gap:6px;margin-bottom:3px;"><span style="color:var(--accent);flex-shrink:0;">▸</span><span>${line.slice(2).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}</span></div>`;
+    if(line.startsWith("# ")) return`<div style="font-weight:800;font-size:15px;color:var(--accent);margin-bottom:5px;">${line.slice(2)}</div>`;
+    if(line.trim()==="") return`<div style="height:5px;"></div>`;
+    return`<span>${line.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}</span><br>`;
+  }).join("");
+}
+
+function chatKeydown(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}}
+
+function sendChat(){
+  const val=document.getElementById("chat-input").value.trim();
+  if(!val||chatLoading) return;
+  sendChatMsg(val);
+}
+
+async function sendChatMsg(text){
+  document.getElementById("chat-input").value="";
+  document.getElementById("suggestions").style.display="none";
+  chatMessages.push({role:"user",content:text});
+  chatLoading=true; renderChat();
+  document.getElementById("chat-send-btn").disabled=true;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        system:SYSTEM,
+        messages:chatMessages.map(m=>({role:m.role,content:m.content}))
+      })
+    });
+    const data=await res.json();
+    const reply=data.content?.map(b=>b.text||"").join("")||"Sorry, I couldn't process that.";
+    chatMessages.push({role:"assistant",content:reply});
+  }catch(e){
+    chatMessages.push({role:"assistant",content:"⚠️ Connection error. Please try again."});
+  }
+  chatLoading=false;
+  document.getElementById("chat-send-btn").disabled=false;
+  renderChat();
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+buildNav();
+renderPage();
+setTab("dashboard");
+</script>
+</body>
+</html>

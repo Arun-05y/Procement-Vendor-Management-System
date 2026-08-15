@@ -32,7 +32,7 @@ public class ProcurementService {
                 .orElseThrow(() -> new RuntimeException("Request not found"));
         
         // Mock Budget Validation
-        if (request.getEstimatedBudget() > 50000) {
+        if (request.getEstimatedBudget() != null && request.getEstimatedBudget() > 50000) {
             throw new RuntimeException("Request exceeds department budget limit for auto-approval");
         }
 

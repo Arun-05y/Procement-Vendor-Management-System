@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import { Lock, User as UserIcon } from 'lucide-react';
 
 const Login = () => {
@@ -14,7 +14,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/signin', { username, password });
+      const response = await api.post('/auth/signin', { username, password });
       login(response.data);
       navigate('/dashboard');
     } catch (err) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Plus, FileText, Send, CheckCircle } from 'lucide-react';
 
@@ -15,7 +15,7 @@ const ProcurementRequests = () => {
 
   const fetchRequests = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/procurement/requests', {
+      const response = await api.get('/procurement/requests', {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setRequests(response.data);
@@ -27,7 +27,7 @@ const ProcurementRequests = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:8080/api/procurement/requests', newRequest, {
+      await api.post('/procurement/requests', newRequest, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setShowModal(false);

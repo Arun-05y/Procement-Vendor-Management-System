@@ -33,7 +33,7 @@ const Sidebar = () => {
   ];
 
   const filteredNav = navItems.filter(item => 
-    !item.roles || item.roles.some(role => user?.roles.includes(role))
+    !item.roles || (user?.roles && item.roles.some(role => user.roles.includes(role)))
   );
 
   return (

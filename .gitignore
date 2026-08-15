@@ -1,0 +1,23 @@
+# Maven
+**/target/
+*.class
+
+# Node / Frontend
+**/node_modules/
+**/dist/
+.eslintcache
+
+# IDE / OS files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.classpath
+.project
+.settings/
+bin/
+desktop.ini
+Thumbs.db

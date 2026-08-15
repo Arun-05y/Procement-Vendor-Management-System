@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
 
@@ -14,7 +14,7 @@ const Vendors = () => {
 
   const fetchVendors = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/vendors', {
+      const response = await api.get('/vendors', {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setVendors(response.data);
@@ -27,7 +27,7 @@ const Vendors = () => {
 
   const updateStatus = async (id, status) => {
     try {
-      await axios.put(`http://localhost:8080/api/vendors/${id}/status?status=${status}`, {}, {
+      await api.put(`/vendors/${id}/status?status=${status}`, {}, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       fetchVendors();
