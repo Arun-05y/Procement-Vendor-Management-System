@@ -7,6 +7,8 @@ import com.procurea.procurementsystem.repository.QuotationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -35,5 +37,13 @@ public class PurchaseOrderService {
                 .orElseThrow(() -> new RuntimeException("PO not found"));
         po.setStatus(status);
         return poRepository.save(po);
+    }
+
+    public List<PurchaseOrder> getAllPurchaseOrders() {
+        return poRepository.findAll();
+    }
+
+    public Optional<PurchaseOrder> getPurchaseOrderById(Long id) {
+        return poRepository.findById(id);
     }
 }

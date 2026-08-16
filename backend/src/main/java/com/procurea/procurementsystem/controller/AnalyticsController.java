@@ -1,5 +1,6 @@
 package com.procurea.procurementsystem.controller;
 
+import com.procurea.procurementsystem.dto.AnalyticsSummaryDto;
 import com.procurea.procurementsystem.model.Quotation;
 import com.procurea.procurementsystem.service.AnalyticsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,12 @@ public class AnalyticsController {
     @PreAuthorize("hasRole('ADMIN')")
     public Map<String, Double> getCostTrends() {
         return analyticsService.getCostTrends();
+    }
+
+    @GetMapping("/summary")
+    @PreAuthorize("hasRole('PROCUREMENT_OFFICER') or hasRole('ADMIN')")
+    public ResponseEntity<AnalyticsSummaryDto> getAnalyticsSummary() {
+        return ResponseEntity.ok(analyticsService.getAnalyticsSummary());
     }
 
     @GetMapping("/recommend/{rfqId}")

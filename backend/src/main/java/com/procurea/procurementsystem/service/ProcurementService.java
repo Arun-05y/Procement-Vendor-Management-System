@@ -2,13 +2,17 @@ package com.procurea.procurementsystem.service;
 
 import com.procurea.procurementsystem.model.ProcurementRequest;
 import com.procurea.procurementsystem.model.RFQ;
+import com.procurea.procurementsystem.model.Vendor;
 import com.procurea.procurementsystem.repository.ProcurementRequestRepository;
 import com.procurea.procurementsystem.repository.RFQRepository;
+import com.procurea.procurementsystem.repository.VendorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -18,6 +22,9 @@ public class ProcurementService {
 
     @Autowired
     private RFQRepository rfqRepository;
+
+    @Autowired
+    private VendorRepository vendorRepository;
 
     public ProcurementRequest createRequest(ProcurementRequest request) {
         return requestRepository.save(request);
@@ -56,6 +63,18 @@ public class ProcurementService {
         rfq.setDeadline(deadline);
         
         // Add invited vendors if provided
+        if (vendorIds != null && !vendorIds.isEmpty()) {
+            Set<Vendor> vendors = new HashSet<>(vendorRepository.findAllById(vendorIds));
+            rfq.setInvitedVendors(vendors);
+        }
         return rfqRepository.save(rfq);
+    }
+
+    public List<RFQ> getAllRFQs() {
+        return rfqRepository.findAll();
+    }
+
+    public Optional<RFQ> getRFQById(Long id) {
+        return rfqRepository.findById(id);
     }
 }

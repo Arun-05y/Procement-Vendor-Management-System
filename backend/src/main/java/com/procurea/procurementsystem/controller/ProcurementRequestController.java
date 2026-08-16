@@ -45,4 +45,18 @@ public class ProcurementRequestController {
             @RequestBody(required = false) Set<Long> vendorIds) {
         return ResponseEntity.ok(procurementService.createRFQ(requestId, LocalDateTime.parse(deadline), vendorIds));
     }
+
+    @GetMapping("/rfqs")
+    @PreAuthorize("hasRole('PROCUREMENT_OFFICER') or hasRole('ADMIN') or hasRole('VENDOR')")
+    public List<RFQ> getAllRFQs() {
+        return procurementService.getAllRFQs();
+    }
+
+    @GetMapping("/rfqs/{id}")
+    @PreAuthorize("hasRole('PROCUREMENT_OFFICER') or hasRole('ADMIN') or hasRole('VENDOR')")
+    public ResponseEntity<RFQ> getRFQById(@PathVariable Long id) {
+        return procurementService.getRFQById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
