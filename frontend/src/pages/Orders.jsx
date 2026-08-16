@@ -1,20 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import { ShoppingBag, Printer, ExternalLink } from 'lucide-react';
 
 const Orders = () => {
-  const mockOrders = [
-    { id: 1, poNumber: 'PO-A92B3C', vendor: 'Global Supplies', date: '2026-03-12', amount: 5400, status: 'SHIPPED' },
-    { id: 2, poNumber: 'PO-F8E1D2', vendor: 'Tech Corp', date: '2026-03-10', amount: 12500, status: 'DELIVERED' },
-    { id: 3, poNumber: 'PO-3C2B1A', vendor: 'Office World', date: '2026-03-13', amount: 850, status: 'ISSUED' },
-  ];
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await api.get('/purchase-orders');
+      setOrders(response.data);
+    } catch (err) {
+      console.error('Error fetching purchase orders', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading Orders...</div>;
 
   return (
     <div className="animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
         <h1>Purchase Orders</h1>
-        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ShoppingBag size={20} /> New Order
-        </button>
       </div>
 
       <div className="glass" style={{ overflow: 'hidden' }}>
@@ -30,12 +42,12 @@ const Orders = () => {
             </tr>
           </thead>
           <tbody>
-            {mockOrders.map(order => (
+            {orders.map(order => (
               <tr key={order.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
                 <td style={{ padding: '15px 20px', fontWeight: 'bold' }}>{order.poNumber}</td>
-                <td style={{ padding: '15px 20px' }}>{order.vendor}</td>
-                <td style={{ padding: '15px 20px' }}>{order.date}</td>
-                <td style={{ padding: '15px 20px' }}>${order.amount?.toLocaleString()}</td>
+                <td style={{ padding: '15px 20px' }}>{order.quotation?.vendor?.companyName || 'N/A'}</td>
+                <td style={{ padding: '15px 20px' }}>{order.issuedDate ? new Date(order.issuedDate).toLocaleDateString() : 'N/A'}</td>
+                <td style={{ padding: '15px 20px' }}>${order.quotation?.totalAmount?.toLocaleString() || 0}</td>
                 <td style={{ padding: '15px 20px' }}>
                   <span style={{ 
                     padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem',
@@ -53,6 +65,11 @@ const Orders = () => {
             ))}
           </tbody>
         </table>
+        {orders.length === 0 && (
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-dim)' }}>
+            No purchase orders found in the system.
+          </div>
+        )}
       </div>
     </div>
   );

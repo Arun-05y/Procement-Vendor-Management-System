@@ -1,26 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import { Package, Calendar, Award, TrendingUp } from 'lucide-react';
 
 const RFQManagement = () => {
   const [rfqs, setRfqs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
   useEffect(() => {
     fetchRfqs();
   }, []);
 
   const fetchRfqs = async () => {
-    // In a real app, this would be an API call
-    // For now, let's mock some RFQs since we haven't created them via UI yet
-    setRfqs([
-      { id: 1, title: 'Laptops for IT Dept', deadline: '2026-04-01', status: 'OPEN', responses: 3 },
-      { id: 2, title: 'Office Furniture', deadline: '2026-03-25', status: 'CLOSED', responses: 5 },
-    ]);
-    setLoading(false);
+    try {
+      const response = await api.get('/procurement/rfqs');
+      setRfqs(response.data);
+    } catch (err) {
+      console.error('Error fetching RFQs', err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading RFQs...</div>;
 
   return (
     <div className="animate-fade-in">
@@ -39,12 +40,12 @@ const RFQManagement = () => {
                 color: rfq.status === 'OPEN' ? '#10b981' : '#f43f5e'
               }}>{rfq.status}</span>
             </div>
-            <h3 style={{ marginBottom: '15px' }}>{rfq.title}</h3>
+            <h3 style={{ marginBottom: '15px' }}>{rfq.request?.title || 'RFQ for Request #' + rfq.request?.id}</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-dim)', fontSize: '0.85rem', marginBottom: '8px' }}>
-              <Calendar size={16} /> Deadline: {rfq.deadline}
+              <Calendar size={16} /> Deadline: {rfq.deadline ? new Date(rfq.deadline).toLocaleDateString() : 'N/A'}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-dim)', fontSize: '0.85rem', marginBottom: '25px' }}>
-              <TrendingUp size={16} /> Responses: {rfq.responses}
+              <TrendingUp size={16} /> Invited Vendors: {rfq.invitedVendors?.length || 0}
             </div>
             
             <button className="btn btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -53,6 +54,11 @@ const RFQManagement = () => {
           </div>
         ))}
       </div>
+      {rfqs.length === 0 && (
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-dim)' }}>
+          No RFQs found in the system.
+        </div>
+      )}
     </div>
   );
 };

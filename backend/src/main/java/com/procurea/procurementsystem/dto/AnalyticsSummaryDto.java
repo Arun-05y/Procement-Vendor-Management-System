@@ -15,4 +15,7 @@ public class AnalyticsSummaryDto {
     private Double avgLeadTime; // in days
     private Map<String, Double> spendByDepartment;
     private Map<String, Double> costTrends;
+    private Long vendorCount;
+    private Long rfqCount;
+    private Long poCount;
 }

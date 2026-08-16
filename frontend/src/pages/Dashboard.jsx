@@ -1,5 +1,6 @@
-import React from 'react';
-import { ShoppingBag, Users, FileText, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingBag, Users, FileText, CheckCircle, DollarSign } from 'lucide-react';
+import api from '../services/api';
 
 const StatCard = ({ title, value, icon, color }) => (
   <div className="glass animate-fade-in" style={{ padding: '24px', flex: 1, minWidth: '200px' }}>
@@ -16,38 +17,101 @@ const StatCard = ({ title, value, icon, color }) => (
 );
 
 const Dashboard = () => {
+  const [stats, setStats] = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [vendors, setVendors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        const [statsRes, requestsRes, vendorsRes] = await Promise.all([
+          api.get('/analytics/summary'),
+          api.get('/procurement/requests'),
+          api.get('/vendors')
+        ]);
+        setStats(statsRes.data);
+        setRequests(requestsRes.data.slice(0, 5)); // show recent 5
+        setVendors(vendorsRes.data.slice(0, 3)); // show top 3
+      } catch (err) {
+        console.error('Error loading dashboard data', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadDashboardData();
+  }, []);
+
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading Overview...</div>;
+
   return (
     <div>
       <h1 style={{ marginBottom: '30px' }}>Procurement Overview</h1>
       
       <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
-        <StatCard title="Active Vendors" value="24" icon={<Users />} color="#6366f1" />
-        <StatCard title="Pending RFQs" value="12" icon={<FileText />} color="#f59e0b" />
-        <StatCard title="Total Orders" value="156" icon={<ShoppingBag />} color="#10b981" />
-        <StatCard title="Completed" value="142" icon={<CheckCircle />} color="#6366f1" />
+        <StatCard title="Active Vendors" value={stats?.vendorCount || 0} icon={<Users />} color="#6366f1" />
+        <StatCard title="Pending RFQs" value={stats?.rfqCount || 0} icon={<FileText />} color="#f59e0b" />
+        <StatCard title="Total Spend" value={`$${(stats?.totalSpend || 0).toLocaleString()}`} icon={<DollarSign />} color="#10b981" />
+        <StatCard title="Avg. Lead Time" value={`${stats?.avgLeadTime ? stats.avgLeadTime.toFixed(1) : 0} days`} icon={<CheckCircle />} color="#6366f1" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px' }}>
         <div className="glass" style={{ padding: '30px', minHeight: '300px' }}>
           <h3>Recent Procurement Requests</h3>
-          <p style={{ color: 'var(--text-dim)', marginTop: '40px', textAlign: 'center' }}>
-            Fetch data from API to display here
-          </p>
+          <div style={{ marginTop: '20px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                  <th style={{ padding: '10px 5px', fontSize: '0.8rem', color: 'var(--text-dim)' }}>Title</th>
+                  <th style={{ padding: '10px 5px', fontSize: '0.8rem', color: 'var(--text-dim)' }}>Dept</th>
+                  <th style={{ padding: '10px 5px', fontSize: '0.8rem', color: 'var(--text-dim)' }}>Budget</th>
+                  <th style={{ padding: '10px 5px', fontSize: '0.8rem', color: 'var(--text-dim)' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map(req => (
+                  <tr key={req.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                    <td style={{ padding: '10px 5px', fontWeight: '500' }}>{req.title}</td>
+                    <td style={{ padding: '10px 5px' }}>{req.department}</td>
+                    <td style={{ padding: '10px 5px' }}>${req.estimatedBudget?.toLocaleString()}</td>
+                    <td style={{ padding: '10px 5px' }}>
+                      <span style={{ 
+                        fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px',
+                        background: req.status === 'APPROVED' ? '#10b98120' : '#6366f120',
+                        color: req.status === 'APPROVED' ? '#10b981' : '#6366f1'
+                      }}>{req.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {requests.length === 0 && (
+              <p style={{ color: 'var(--text-dim)', marginTop: '40px', textAlign: 'center' }}>
+                No recent procurement requests found.
+              </p>
+            )}
+          </div>
         </div>
+
         <div className="glass" style={{ padding: '30px' }}>
           <h3>Vendor Ratings</h3>
           <div style={{ marginTop: '20px' }}>
-            {['Vendor Alpha', 'Global Supplies', 'Tech Corp'].map(v => (
-              <div key={v} style={{ marginBottom: '15px' }}>
+            {vendors.map(v => (
+              <div key={v.id} style={{ marginBottom: '15px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                  <span>{v}</span>
-                  <span style={{ color: '#10b981' }}>4.8 ★</span>
+                  <span>{v.companyName}</span>
+                  <span style={{ color: '#10b981' }}>{v.rating || 0} ★</span>
                 </div>
                 <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px' }}>
-                  <div style={{ width: '90%', height: '100%', background: 'var(--primary)', borderRadius: '3px' }}></div>
+                  <div style={{ width: `${(v.rating || 0) * 20}%`, height: '100%', background: 'var(--primary)', borderRadius: '3px' }}></div>
                 </div>
               </div>
             ))}
+            {vendors.length === 0 && (
+              <p style={{ color: 'var(--text-dim)', textAlign: 'center', marginTop: '20px' }}>
+                No vendor data.
+              </p>
+            )}
           </div>
         </div>
       </div>

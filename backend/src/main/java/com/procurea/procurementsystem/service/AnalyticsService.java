@@ -7,6 +7,8 @@ import com.procurea.procurementsystem.model.RFQ;
 import com.procurea.procurementsystem.repository.DeliveryRepository;
 import com.procurea.procurementsystem.repository.QuotationRepository;
 import com.procurea.procurementsystem.repository.RFQRepository;
+import com.procurea.procurementsystem.repository.VendorRepository;
+import com.procurea.procurementsystem.repository.PurchaseOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,12 @@ public class AnalyticsService {
 
     @Autowired
     private DeliveryRepository deliveryRepository;
+
+    @Autowired
+    private VendorRepository vendorRepository;
+
+    @Autowired
+    private PurchaseOrderRepository poRepository;
 
     public Map<String, Double> getCostTrends() {
         List<Quotation> acceptedQuotations = quotationRepository.findAll().stream()
@@ -120,6 +128,11 @@ public class AnalyticsService {
         // 5. Cost Trends (by Month)
         Map<String, Double> trends = getCostTrends();
 
-        return new AnalyticsSummaryDto(totalSpend, totalSavings, avgLeadTime, spendByDept, trends);
+        // 6. Counts
+        long vendorCount = vendorRepository.count();
+        long rfqCount = rfqRepository.count();
+        long poCount = poRepository.count();
+
+        return new AnalyticsSummaryDto(totalSpend, totalSavings, avgLeadTime, spendByDept, trends, vendorCount, rfqCount, poCount);
     }
 }
