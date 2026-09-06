@@ -1,7 +1,7 @@
 package com.procurea.procurementsystem.controller;
 
 import com.procurea.procurementsystem.dto.AnalyticsSummaryDto;
-import com.procurea.procurementsystem.model.Quotation;
+import com.procurea.procurementsystem.dto.ApiResponse;
 import com.procurea.procurementsystem.service.AnalyticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,25 +14,21 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/analytics")
 public class AnalyticsController {
+
     @Autowired
     private AnalyticsService analyticsService;
 
     @GetMapping("/cost-trends")
     @PreAuthorize("hasRole('ADMIN')")
-    public Map<String, Double> getCostTrends() {
-        return analyticsService.getCostTrends();
+    public ResponseEntity<ApiResponse<Map<String, Double>>> getCostTrends() {
+        Map<String, Double> trends = analyticsService.getCostTrends();
+        return ResponseEntity.ok(ApiResponse.success("Cost trends fetched successfully", trends));
     }
 
     @GetMapping("/summary")
-    @PreAuthorize("hasRole('PROCUREMENT_OFFICER') or hasRole('ADMIN')")
-    public ResponseEntity<AnalyticsSummaryDto> getAnalyticsSummary() {
-        return ResponseEntity.ok(analyticsService.getAnalyticsSummary());
-    }
-
-    @GetMapping("/recommend/{rfqId}")
-    @PreAuthorize("hasRole('PROCUREMENT_OFFICER')")
-    public ResponseEntity<Quotation> getRecommendation(@PathVariable Long rfqId) {
-        Quotation recommended = analyticsService.recommendBestVendor(rfqId);
-        return recommended != null ? ResponseEntity.ok(recommended) : ResponseEntity.noContent().build();
+    @PreAuthorize("hasRole('PROCUREMENT_MANAGER') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<AnalyticsSummaryDto>> getAnalyticsSummary() {
+        AnalyticsSummaryDto summary = analyticsService.getAnalyticsSummary();
+        return ResponseEntity.ok(ApiResponse.success("Analytics summary fetched successfully", summary));
     }
 }

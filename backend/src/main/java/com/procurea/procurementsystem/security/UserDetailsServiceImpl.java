@@ -1,6 +1,6 @@
 package com.procurea.procurementsystem.security;
 
-import com.procurea.procurementsystem.model.User;
+import com.procurea.procurementsystem.entity.User;
 import com.procurea.procurementsystem.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

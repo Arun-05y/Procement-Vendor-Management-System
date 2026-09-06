@@ -1,6 +1,6 @@
 package com.procurea.procurementsystem.repository;
 
-import com.procurea.procurementsystem.model.Role;
+import com.procurea.procurementsystem.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

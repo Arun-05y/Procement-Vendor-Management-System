@@ -1,15 +1,13 @@
 package com.procurea.procurementsystem.controller;
 
-import com.procurea.procurementsystem.dto.JwtResponse;
-import com.procurea.procurementsystem.dto.LoginRequest;
-import com.procurea.procurementsystem.dto.MessageResponse;
-import com.procurea.procurementsystem.dto.SignupRequest;
-import com.procurea.procurementsystem.model.Role;
-import com.procurea.procurementsystem.model.User;
+import com.procurea.procurementsystem.dto.*;
+import com.procurea.procurementsystem.entity.Role;
+import com.procurea.procurementsystem.entity.User;
 import com.procurea.procurementsystem.repository.RoleRepository;
 import com.procurea.procurementsystem.repository.UserRepository;
 import com.procurea.procurementsystem.security.JwtUtils;
 import com.procurea.procurementsystem.security.UserDetailsImpl;
+import com.procurea.procurementsystem.service.VendorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,23 +28,25 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/auth")
 public class AuthController {
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    RoleRepository roleRepository;
+    private RoleRepository roleRepository;
 
     @Autowired
-    PasswordEncoder encoder;
+    private PasswordEncoder encoder;
 
     @Autowired
-    JwtUtils jwtUtils;
+    private JwtUtils jwtUtils;
+
+    @Autowired
+    private VendorService vendorService;
 
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-
+    public ResponseEntity<ApiResponse<JwtResponse>> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
@@ -58,25 +58,27 @@ public class AuthController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(new JwtResponse(jwt,
+        JwtResponse jwtResponse = new JwtResponse(jwt,
                 userDetails.getId(),
                 userDetails.getUsername(),
                 userDetails.getEmail(),
-                roles));
+                roles);
+
+        return ResponseEntity.ok(ApiResponse.success("Sign in successful", jwtResponse));
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+    public ResponseEntity<ApiResponse<MessageResponse>> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+                    .body(ApiResponse.error("Error: Username is already taken!"));
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Error: Email is already in use!"));
+                    .body(ApiResponse.error("Error: Email is already in use!"));
         }
 
         // Create new user's account
@@ -87,20 +89,23 @@ public class AuthController {
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
 
+        boolean isVendor = false;
+
         if (strRoles == null) {
-            Role userRole = roleRepository.findByName(Role.ERole.ROLE_USER)
+            Role userRole = roleRepository.findByName(Role.ERole.ROLE_EMPLOYEE)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
             roles.add(userRole);
         } else {
-            strRoles.forEach(role -> {
-                switch (role) {
+            for (String role : strRoles) {
+                switch (role.toLowerCase()) {
                     case "admin":
                         Role adminRole = roleRepository.findByName(Role.ERole.ROLE_ADMIN)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(adminRole);
                         break;
                     case "procurement":
-                        Role modRole = roleRepository.findByName(Role.ERole.ROLE_PROCUREMENT_OFFICER)
+                    case "manager":
+                        Role modRole = roleRepository.findByName(Role.ERole.ROLE_PROCUREMENT_MANAGER)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(modRole);
                         break;
@@ -108,18 +113,30 @@ public class AuthController {
                         Role vendorRole = roleRepository.findByName(Role.ERole.ROLE_VENDOR)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(vendorRole);
+                        isVendor = true;
                         break;
                     default:
-                        Role userRole = roleRepository.findByName(Role.ERole.ROLE_USER)
+                        Role userRole = roleRepository.findByName(Role.ERole.ROLE_EMPLOYEE)
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
                         roles.add(userRole);
                 }
-            });
+            }
         }
 
         user.setRoles(roles);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        // If user is a vendor, initialize blank vendor profile
+        if (isVendor) {
+            VendorDto vendorDto = new VendorDto();
+            vendorDto.setCompanyName(savedUser.getUsername() + " Company");
+            vendorDto.setEmail(savedUser.getEmail());
+            vendorDto.setPhoneNumber("");
+            vendorDto.setAddress("");
+            vendorDto.setCategory("General");
+            vendorService.registerVendor(vendorDto, savedUser.getId());
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully!", new MessageResponse("User registered successfully!")));
     }
 }

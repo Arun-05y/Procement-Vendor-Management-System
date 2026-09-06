@@ -1,38 +1,19 @@
 package com.procurea.procurementsystem.service;
 
-import com.procurea.procurementsystem.model.Vendor;
-import com.procurea.procurementsystem.repository.VendorRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.procurea.procurementsystem.dto.VendorDto;
+import com.procurea.procurementsystem.entity.Vendor;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
-import java.util.Optional;
 
-@Service
-public class VendorService {
-    @Autowired
-    private VendorRepository vendorRepository;
-
-    public Vendor registerVendor(Vendor vendor) {
-        return vendorRepository.save(vendor);
-    }
-
-    public List<Vendor> getAllVendors() {
-        return vendorRepository.findAll();
-    }
-
-    public Optional<Vendor> getVendorById(Long id) {
-        return vendorRepository.findById(id);
-    }
-
-    public List<Vendor> getVendorsByStatus(Vendor.VendorStatus status) {
-        return vendorRepository.findByStatus(status);
-    }
-
-    public Vendor updateVendorStatus(Long id, Vendor.VendorStatus status) {
-        Vendor vendor = vendorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Vendor not found"));
-        vendor.setStatus(status);
-        return vendorRepository.save(vendor);
-    }
+public interface VendorService {
+    VendorDto registerVendor(VendorDto vendorDto, Long userId);
+    Page<VendorDto> getAllVendors(Vendor.VendorStatus status, String category, String search, int page, int size, String sortBy, String sortDir);
+    List<VendorDto> getActiveVendors();
+    VendorDto getVendorById(Long id);
+    VendorDto getVendorByUserId(Long userId);
+    VendorDto updateVendor(Long id, VendorDto vendorDto);
+    VendorDto updateVendorStatus(Long id, Vendor.VendorStatus status);
+    void deleteVendor(Long id);
+    void updatePerformanceMetrics(Long vendorId, Double onTimeRate, Double fulfillmentRate, Double qualityScore, Double responseHours);
 }

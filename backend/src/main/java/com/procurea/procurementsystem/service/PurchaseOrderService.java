@@ -1,49 +1,16 @@
 package com.procurea.procurementsystem.service;
 
-import com.procurea.procurementsystem.model.PurchaseOrder;
-import com.procurea.procurementsystem.model.Quotation;
-import com.procurea.procurementsystem.repository.PurchaseOrderRepository;
-import com.procurea.procurementsystem.repository.QuotationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.procurea.procurementsystem.dto.PurchaseOrderDto;
+import com.procurea.procurementsystem.entity.PurchaseOrder;
+import org.springframework.data.domain.Page;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
-@Service
-public class PurchaseOrderService {
-    @Autowired
-    private PurchaseOrderRepository poRepository;
-
-    @Autowired
-    private QuotationRepository quotationRepository;
-
-    public PurchaseOrder generatePO(Long quotationId) {
-        Quotation quotation = quotationRepository.findById(quotationId)
-                .orElseThrow(() -> new RuntimeException("Quotation not found"));
-
-        quotation.setStatus(Quotation.QuotationStatus.ACCEPTED);
-        quotationRepository.save(quotation);
-
-        PurchaseOrder po = new PurchaseOrder();
-        po.setQuotation(quotation);
-        po.setPoNumber("PO-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        return poRepository.save(po);
-    }
-
-    public PurchaseOrder updatePOStatus(Long id, PurchaseOrder.POStatus status) {
-        PurchaseOrder po = poRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("PO not found"));
-        po.setStatus(status);
-        return poRepository.save(po);
-    }
-
-    public List<PurchaseOrder> getAllPurchaseOrders() {
-        return poRepository.findAll();
-    }
-
-    public Optional<PurchaseOrder> getPurchaseOrderById(Long id) {
-        return poRepository.findById(id);
-    }
+public interface PurchaseOrderService {
+    PurchaseOrderDto createPurchaseOrder(Long quotationId, String deliveryAddress, LocalDateTime expectedDeliveryDate, String termsAndConditions);
+    PurchaseOrderDto getPurchaseOrderById(Long id);
+    Page<PurchaseOrderDto> getAllPurchaseOrders(PurchaseOrder.POStatus status, String search, int page, int size);
+    Page<PurchaseOrderDto> getPurchaseOrdersForVendor(Long vendorId, PurchaseOrder.POStatus status, String search, int page, int size);
+    PurchaseOrderDto updatePOStatus(Long id, PurchaseOrder.POStatus status);
+    PurchaseOrderDto acknowledgePO(Long id, Long vendorId);
 }
