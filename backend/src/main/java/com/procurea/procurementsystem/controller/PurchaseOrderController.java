@@ -28,7 +28,7 @@ public class PurchaseOrderController {
     private VendorService vendorService;
 
     @PostMapping("/generate")
-    @PreAuthorize("hasRole('PROCUREMENT_MANAGER')")
+    @PreAuthorize("hasRole('PROCUREMENT_MANAGER') or hasRole('PROCUREMENT_EXECUTIVE') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PurchaseOrderDto>> generatePO(
             @RequestParam Long quotationId,
             @RequestParam String deliveryAddress,
@@ -39,8 +39,36 @@ public class PurchaseOrderController {
         return ResponseEntity.ok(ApiResponse.success("Purchase Order generated successfully", po));
     }
 
+    @PostMapping("/from-request")
+    @PreAuthorize("hasRole('PROCUREMENT_MANAGER') or hasRole('PROCUREMENT_EXECUTIVE') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<PurchaseOrderDto>> createPOFromRequest(
+            @RequestParam Long purchaseRequestId,
+            @RequestParam Long vendorId,
+            @RequestParam String deliveryAddress,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime expectedDeliveryDate,
+            @RequestParam(required = false, defaultValue = "0.0") Double discount,
+            @RequestParam(required = false, defaultValue = "Net 30 Days") String termsAndConditions) {
+        
+        PurchaseOrderDto po = poService.createPurchaseOrderFromRequest(
+                purchaseRequestId,
+                vendorId,
+                deliveryAddress,
+                expectedDeliveryDate != null ? expectedDeliveryDate : LocalDateTime.now().plusDays(14),
+                discount,
+                termsAndConditions
+        );
+        return ResponseEntity.ok(ApiResponse.success("Purchase Order created from request successfully", po));
+    }
+
+    @PostMapping("/direct")
+    @PreAuthorize("hasRole('PROCUREMENT_MANAGER') or hasRole('PROCUREMENT_EXECUTIVE') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<PurchaseOrderDto>> createDirectPO(@RequestBody PurchaseOrderDto dto) {
+        PurchaseOrderDto po = poService.createDirectPO(dto);
+        return ResponseEntity.ok(ApiResponse.success("Direct Purchase Order created successfully", po));
+    }
+
     @GetMapping
-    @PreAuthorize("hasRole('PROCUREMENT_MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Page<PurchaseOrderDto>>> getAllPurchaseOrders(
             @RequestParam(required = false) PurchaseOrder.POStatus status,
             @RequestParam(required = false) String search,
@@ -65,14 +93,14 @@ public class PurchaseOrderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('PROCUREMENT_MANAGER') or hasRole('ADMIN') or hasRole('VENDOR')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<PurchaseOrderDto>> getPurchaseOrderById(@PathVariable Long id) {
         PurchaseOrderDto po = poService.getPurchaseOrderById(id);
         return ResponseEntity.ok(ApiResponse.success("Purchase Order fetched successfully", po));
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasRole('PROCUREMENT_MANAGER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PROCUREMENT_MANAGER') or hasRole('ADMIN') or hasRole('PROCUREMENT_EXECUTIVE')")
     public ResponseEntity<ApiResponse<PurchaseOrderDto>> updateStatus(
             @PathVariable Long id, 
             @RequestParam PurchaseOrder.POStatus status) {
