@@ -1,0 +1,304 @@
+{
+  "info": {
+    "name": "ProcurEA Procurement System API",
+    "description": "Postman API Collection for ProcurEA Procurement & Vendor Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Sign In (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signin",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "signin"]
+            }
+          }
+        },
+        {
+          "name": "Sign Up (New User)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@procurea.com\",\n  \"password\": \"password123\",\n  \"role\": [\"ROLE_PROCUREMENT_EXECUTIVE\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "signup"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Vendors",
+      "item": [
+        {
+          "name": "List All Vendors",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendors",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendors"]
+            }
+          }
+        },
+        {
+          "name": "Get Vendor By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendors/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendors", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Vendor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Summit Supplies Ltd\",\n  \"contactPerson\": \"Emily Carter\",\n  \"email\": \"emily@summitsupplies.com\",\n  \"phoneNumber\": \"+1-555-0789\",\n  \"category\": \"Office Supplies\",\n  \"city\": \"Seattle\",\n  \"state\": \"WA\",\n  \"country\": \"USA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendors",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendors"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Purchase Requests",
+      "item": [
+        {
+          "name": "List Purchase Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/purchase-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["purchase-requests"]
+            }
+          }
+        },
+        {
+          "name": "Create Purchase Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Engineering Laptops Q3\",\n  \"department\": \"Engineering\",\n  \"requesterName\": \"Alice Smith\",\n  \"requesterEmail\": \"alice@procurea.com\",\n  \"priority\": \"HIGH\",\n  \"estimatedBudget\": 15000.00,\n  \"items\": [\n    {\n      \"itemName\": \"Dell Latitude 5440\",\n      \"quantity\": 10,\n      \"estimatedUnitPrice\": 950.00,\n      \"totalPrice\": 9500.00\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/purchase-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["purchase-requests"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. RFQs & Quotations",
+      "item": [
+        {
+          "name": "List RFQs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rfqs",
+              "host": ["{{baseUrl}}"],
+              "path": ["rfqs"]
+            }
+          }
+        },
+        {
+          "name": "Compare Quotations for RFQ",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/compare/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["quotations", "compare", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Purchase Orders & Deliveries",
+      "item": [
+        {
+          "name": "List Purchase Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/purchase-orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["purchase-orders"]
+            }
+          }
+        },
+        {
+          "name": "List Deliveries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/deliveries",
+              "host": ["{{baseUrl}}"],
+              "path": ["deliveries"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Analytics & AI Assistant",
+      "item": [
+        {
+          "name": "Get Analytics Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "summary"]
+            }
+          }
+        },
+        {
+          "name": "AI Recommend Vendor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rfqId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/recommend-vendor",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "recommend-vendor"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
